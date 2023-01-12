@@ -21,6 +21,7 @@ BAD_TIME = 0.783
 
 FILE_NAME = "./humen.csv"
 mode = False
+AUTO = False
 
 # Color
 WHITE = (255, 255, 255)
@@ -32,6 +33,8 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 notes_list = []
+list_lane1 = []
+list_lane2 = []
 
 create_list = []
 
@@ -67,20 +70,20 @@ class Notes:
 # ボタンを押したタイミングを自動で譜面ファイルに書き込む 
 # タイミングを微調整して完成
 
-def judge():
+def judge(lane):
     result = None
     res_index = None
     c = 0
-    for i,notes in enumerate(notes_list):
-        if notes.active:
-            if c == 0:
-                result = abs(END_POS_X-notes.x)
-                dif = abs(END_POS_X-notes.x)
-                res_index = i
-            if dif<result: 
-                result = dif 
-                res_index = i
-            c+=1
+    list_lane = list_lane1 if lane==1 else list_lane2
+    for i,notes in enumerate(list_lane):
+        if c == 0:
+            result = abs(END_POS_X-notes.x)
+            res_index = i
+        dif = abs(END_POS_X-notes.x)
+        if dif<result: 
+            result = dif
+            res_index = i
+        c+=1
     return res_index
 
 
@@ -105,6 +108,8 @@ def main():
         time = float(content[0])
         lane = int(content[1])
         notes = Notes(x,y,time,lane)
+        if lane == 1: list_lane1.append(notes)
+        else: list_lane2.append(notes)
         notes_list.append(notes)
 
     while True:
@@ -117,7 +122,7 @@ def main():
         pygame.draw.circle(screen,GRAY,(END_POS_X,SCREEN_HEIGHT/2),NOTES_SIZE)
         pygame.draw.circle(screen,GRAY,(END_POS_X,SCREEN_HEIGHT*(1/3)),NOTES_SIZE)
         
-        for notes in notes_list: 
+        for notes in list_lane1+list_lane2: 
             time = notes.time
             speed = notes.speed
             notes.x = END_POS_X + DIR*((time-music_time)*LENGTH*speed)
@@ -125,10 +130,13 @@ def main():
             
             if notes.x < 0-NOTES_SIZE/2:
                 notes.active = False
+                
             elif notes.x < SCREEN_WIDTH+NOTES_SIZE/2:
                 notes.active = True
             if notes.active and not notes.des:    
                 pygame.draw.circle(screen,BLACK,(notes.x,notes.y),NOTES_SIZE)
+            if AUTO:
+                if notes.x <= END_POS_X: notes.judge(music_time)
         
         t_music_time = font.render("{0}".format(math.floor(music_time*10)/10), True, (0,0,0))
         t_music_w = font.size("{0}".format(math.floor(music_time*10)/10))[0]
@@ -143,7 +151,7 @@ def main():
                 sys.exit()
             if event.type == KEYDOWN:
                 key_name = pygame.key.name(event.key)
-                print(key_name)
+                # print(key_name)
                 if event.key == K_ESCAPE:
                     pygame.quit()
                     sys.exit()
@@ -158,15 +166,15 @@ def main():
                     if mode:
                         li = [music_time,1]
                         create_list.append(li)
-                    index = judge()
-                    notes_list[index].judge(music_time)
+                    index = judge(2)
+                    list_lane2[index].judge(music_time)
                     
                 elif event.key == K_j:
                     if mode:
                         li = [music_time,2]
                         create_list.append(li)
-                    index = judge()
-                    notes_list[index].judge(music_time)
+                    index = judge(1)
+                    list_lane1[index].judge(music_time)
 
                 elif event.key == K_q:
                     if mode:
