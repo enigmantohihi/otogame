@@ -9,8 +9,8 @@ SCREEN_HEIGHT = 600
 FPS = 60
 
 NOTES_SIZE = 20
-NOTES_SPEED = 0.5
-END_POS_X = 120
+NOTES_SPEED = 0.1
+END_POS_X = (240,120)
 DIR = 1
 LENGTH = SCREEN_WIDTH
 
@@ -141,6 +141,10 @@ def main():
     font = pygame.font.Font(None, 32)
     pygame.mixer.init(frequency = 44100)
     pygame.mixer.music.load("./asset/bgm/gyakuten1.mp3")
+    se1 = pygame.mixer.Sound("./asset/se/den.wav")
+    se1.set_volume(0.3)
+    se2 = pygame.mixer.Sound("./asset/se/tukue_ban.wav")
+    se2.set_volume(0.5)
     pygame.mixer.music.play(1)
     pygame.mixer.music.pause()
 
@@ -160,42 +164,46 @@ def main():
         # 音楽の現在時間取得
         music_time = pygame.mixer.music.get_pos()/1000
         # レーンと判定枠の描画
-        pygame.draw.line(screen, BLACK, (0,SCREEN_HEIGHT/2), (SCREEN_WIDTH,SCREEN_HEIGHT/2), 2)
         pygame.draw.line(screen, BLACK, (0,SCREEN_HEIGHT*(1/3)), (SCREEN_WIDTH,SCREEN_HEIGHT*(1/3)), 2)
-        pygame.draw.circle(screen,GRAY,(END_POS_X,SCREEN_HEIGHT/2),NOTES_SIZE)
-        pygame.draw.circle(screen,GRAY,(END_POS_X,SCREEN_HEIGHT*(1/3)),NOTES_SIZE)
+        pygame.draw.line(screen, BLACK, (0,SCREEN_HEIGHT/2), (SCREEN_WIDTH,SCREEN_HEIGHT/2), 2)
+        pygame.draw.circle(screen,GRAY,(END_POS_X[0],SCREEN_HEIGHT*(1/3)),NOTES_SIZE)
+        pygame.draw.circle(screen,GRAY,(END_POS_X[1],SCREEN_HEIGHT/2),NOTES_SIZE)
+        
         
         # 音楽時間に合わせてノーツの状態を更新
-        for notes in lane_list[0]+lane_list[1]:
-            if notes.finish:
-                # ノーツの役目が終わっていたら無視
-                continue
+        if mode: pass
+        else:
+            for notes in lane_list[0]+lane_list[1]:
+                if notes.finish:
+                    # ノーツの役目が終わっていたら無視
+                    continue
 
-            time = notes.time
-            speed = notes.speed
-            notes.x = END_POS_X + DIR*((time-music_time)*LENGTH*speed)
-            notes.y = SCREEN_HEIGHT*(1/3) if notes.lane==1 else SCREEN_HEIGHT/2
-            
-            if notes.x < 0-NOTES_SIZE/2 or SCREEN_WIDTH+NOTES_SIZE/2 < notes.x:
-                # ノーツが画面外で見えないなら
-                notes.alive = False
-                notes.active = False
-            else:
-                # ノーツが画面内なら
-                notes.alive = notes.is_alive(music_time)
-                notes.active = True
+                time = notes.time
+                speed = notes.speed
+                lane = 0 if notes.lane==1 else 1
+                notes.x = END_POS_X[lane] + DIR*((time-music_time)*LENGTH*speed)
+                notes.y = SCREEN_HEIGHT*(1/3) if notes.lane==1 else SCREEN_HEIGHT/2
                 
-            if notes.active:    
-                pygame.draw.circle(screen,BLACK,(notes.x,notes.y),NOTES_SIZE)
+                if notes.x < 0-NOTES_SIZE/2 or SCREEN_WIDTH+NOTES_SIZE/2 < notes.x:
+                    # ノーツが画面外で見えないなら
+                    notes.alive = False
+                    notes.active = False
+                else:
+                    # ノーツが画面内なら
+                    notes.alive = notes.is_alive(music_time)
+                    notes.active = True
+                    
+                if notes.active:    
+                    pygame.draw.circle(screen,BLACK,(notes.x,notes.y),NOTES_SIZE)
+                
+                if AUTO:
+                    if notes.x <= END_POS_X[lane]:
+                        notes.judge(music_time)
             
-            if AUTO:
-                if notes.x <= END_POS_X:
-                    notes.judge(music_time)
-        
         time_str = "{0}".format(math.floor(music_time*10)/10)
         set_txt_ui(screen,font,time_str,x=0,y=0,anchor=(1,0))
-        set_txt_ui(screen,font,judge_str[0],x=END_POS_X-font.size(judge_str[0])[0]/2,y=SCREEN_HEIGHT*(1/3)-NOTES_SIZE*2,anchor=(0,0))
-        set_txt_ui(screen,font,judge_str[1],x=END_POS_X-font.size(judge_str[1])[0]/2,y=SCREEN_HEIGHT/2-NOTES_SIZE*2,anchor=(0,0))
+        set_txt_ui(screen,font,judge_str[0],x=END_POS_X[0]-font.size(judge_str[0])[0]/2,y=SCREEN_HEIGHT*(1/3)-NOTES_SIZE*2,anchor=(0,0))
+        set_txt_ui(screen,font,judge_str[1],x=END_POS_X[1]-font.size(judge_str[1])[0]/2,y=SCREEN_HEIGHT/2-NOTES_SIZE*2,anchor=(0,0))
         
         pygame.display.update() 
 
@@ -221,6 +229,7 @@ def main():
                     if mode:
                         li = [music_time,1]
                         create_list.append(li)
+                    se1.play()
                     near_notes = find_notes(0,music_time)
                     if near_notes is not None:
                         judge_str[0] = near_notes.judge(music_time)
@@ -230,6 +239,7 @@ def main():
                     if mode:
                         li = [music_time,2]
                         create_list.append(li)
+                    se2.play()
                     near_notes = find_notes(1,music_time)
                     if near_notes is not None:
                         judge_str[1] = near_notes.judge(music_time)
