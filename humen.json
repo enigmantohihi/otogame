@@ -23,18 +23,18 @@
         {"time":3.6,"speed":1,"lane":1},
         {"time":4.0,"speed":1,"lane":1},
         {"time":4.4,"speed":1,"lane":1},
-        {"time":4.6,"speed":1,"lane":1},
+        {"time":4.6,"speed":1,"lane":0},
 
         {"time":4.8,"speed":1,"lane":1},
         {"time":5.2,"speed":1,"lane":1},
         {"time":5.6,"speed":1,"lane":1},
         {"time":6.0,"speed":1,"lane":1},
-        {"time":6.2,"speed":1,"lane":1},
+        {"time":6.2,"speed":1,"lane":0},
 
         {"time":6.4,"speed":1,"lane":1},
         {"time":6.8,"speed":1,"lane":1},
         {"time":7.2,"speed":1,"lane":1},
-        {"time":7.6,"speed":0.5,"lane":0},
+        {"time":7.6,"speed":1,"lane":0},
         {"time":8.0,"speed":1,"lane":1}
     ]
 }
