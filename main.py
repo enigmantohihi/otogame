@@ -1,8 +1,8 @@
 import pygame
 from pygame.locals import *
 import sys
+import os
 import math
-import csv
 import json
 
 SCREEN_WIDTH = 800
@@ -29,28 +29,22 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (100,100,100)
 RED = (255, 0, 0)
+ORANGE = (255,150,50)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
+LIGHT_BLUE = (50,255,255)
+
 
 lane_list = [[],[]]
 
 create_list = []
 judge_str = ["",""]
+judge_is_animation = [False,False]
+str_pos_y = [0,0]
 
 
-# case1 まだ流れてきていないノーツ
-# -> alive = False, active = False, finish = False
-# case2 画面内にあるがまだ叩かれていないノーツ
-# -> alive = False, active = True, finish = False
-# case3 判定枠に近づいて叩けるノーツ
-# -> alive = True, active = True, finish = False
-# case4 叩いたノーツ
-# -> alive = False, active = True, finish = True
-# case5 判定枠を過ぎたノーツ
-# -> alive = False, active = True, finish = True
-# case6 判定枠を過ぎて見えなくなったノーツ
-# -> alive = False, active = False, finish = True
+
 
 class Player:
     def __init__(self,sprites):
@@ -62,7 +56,7 @@ class Player:
         self.animation_time = (30,10,60)
 
     def next_sprite(self):
-        self.animation_count += 1
+        self.animation_count += (1*FPS)
         if self.animation_count >= self.animation_time[self.sprite_number]:
             self.animation_count = 0
             self.sprite_number = (self.sprite_number+1)%len(self.animation_sprites)
@@ -74,14 +68,14 @@ class Player:
         self.animation_sprites = [ori[1],ori[2]]
         self.sprite_number = 0
         self.animation_count = 0
-        self.animation_time = [3,0]
+        self.animation_time = [3*FPS,0]
         self.is_animation = True
     def animation2(self):
         ori = self.sprites
         self.animation_sprites = [ori[0],ori[3]]
         self.sprite_number = 0
         self.animation_count = 0
-        self.animation_time = [4,0]
+        self.animation_time = [4*FPS,0]
         self.is_animation = True
         
     def display(self):
@@ -114,6 +108,9 @@ class Notes:
         self.alive = False
         self.finish = True
         j_time = abs(self.time-now_time)
+
+        str_pos_y[self.lane]=0
+        judge_is_animation[self.lane]=True
         
         if j_time <= PERFECT_TIME:
             judge_str = "Perfect"
@@ -131,39 +128,55 @@ class Notes:
 
 # 譜面が流れてくる処理を作る
 # 譜面ファイルを読み込む
-def create_notes_list(path):
-    use_json = True
+def create_notes_list(name):
+    PATH = "./music/"
+    json_path = ""
+    music_path = ""
+    index = 0
+    files = os.listdir(PATH)
+    dir_list = [f for f in files if os.path.isdir(os.path.join(PATH, f))]
+    for i,dir in enumerate(dir_list):
+        if dir==name:
+            index=i
+            break
+
+    dir_name = PATH + dir_list[index]+"/"
+    for file in os.listdir(dir_name):
+        if file.endswith(".json"):
+            json_path = dir_name + file
+        if file.endswith(".mp3") or file.endswith(".wav"):
+            music_path = dir_name + file
+    # bgmのロード
+    pygame.mixer.init(frequency = 44100)
+    pygame.mixer.music.load(music_path)
+
     lane_list = [[],[]]
-
-    if use_json:
     # json
-        json_open = open(path, 'r')
-        json_load = json.load(json_open)
-        offset = json_load["offset"]
-        for notes in json_load["humen"]:
-            x = 0
-            y = 0
-            time = float(notes["time"]) + offset
-            speed = float(notes["speed"])
-            lane = int(notes["lane"])
-            notes = Notes(x,y,time,speed,lane)
-            if lane == 0: lane_list[0].append(notes)
-            else: lane_list[1].append(notes)
-    else:
-    # csv
-        with open(path, encoding='utf8', newline='') as f:
-            csv_reader = csv.reader(f)
-            contents = [row for row in csv_reader]
-        for content in contents:
-            x = 0
-            y = 0
-            time = float(content[0])
-            speed = 1
-            lane = int(content[1])
-            notes = Notes(x,y,time,speed,lane)
-            if lane == 1: lane_list[0].append(notes)
-            else: lane_list[1].append(notes)
-
+    json_open = open(json_path, 'r')
+    json_load = json.load(json_open)
+    bpm = json_load["bpm"]
+    time_signature = json_load["time_signature"]
+    sheet = json_load["sheet"]
+    offset = json_load["offset"]
+    beat_time = 60/bpm  # 一拍の時間
+    bar_time = beat_time*time_signature[1]  # 1小節の時間
+    
+    for unit in sheet:
+        bar = unit["bar"]  # 何小節目か
+        number = unit["number"]  # 何分音符か
+        notes_spacing = (bar_time/number)*(time_signature[1]/time_signature[0])  # ノーツの間隔
+        notes_list = unit["notes"]
+        speed = unit["speed"]
+        for i,notes in enumerate(notes_list):
+            if notes==0:
+                continue
+            x=0
+            y=0
+            pos = i*notes_spacing  # 小節の中でのノーツの相対的な位置
+            time = (bar_time*bar) + pos + offset
+            lane = 0 if notes==1 else 1
+            notes_instance = Notes(x,y,time,speed,lane)
+            lane_list[lane].append(notes_instance)
     return lane_list
 
 # 譜面ファイルのつくりかた
@@ -201,7 +214,7 @@ def find_notes(lane_list,lane_number,now_time):
 
 def set_txt_ui(screen,font,str,x=0,y=0,anchor=(0,0)):
     # 右寄せ
-    txt = font.render(str, True, (0,0,0))
+    txt = font.render(str, True, WHITE)
     txt_w = font.size(str)[0]
     txt_h = font.size(str)[1]
     x = SCREEN_WIDTH*anchor[0]-txt_w*anchor[0] + x
@@ -210,7 +223,7 @@ def set_txt_ui(screen,font,str,x=0,y=0,anchor=(0,0)):
 
 def main():
     judge_str = ["",""]
-    lane_list = create_notes_list("./humen.json")
+    lane_list = create_notes_list("sample")
 
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -219,10 +232,6 @@ def main():
     font = pygame.font.Font(None, 32)
 
     # 画像読み込み
-    # sp1 = pygame.image.load("./asset/sprite/naruhodo1.jpg").convert_alpha()
-    # sp2 = pygame.image.load("./asset/sprite/naruhodo2.jpg").convert_alpha()
-    # sp3 = pygame.image.load("./asset/sprite/naruhodo3.jpg").convert_alpha()
-    # sp4 = pygame.image.load("./asset/sprite/naruhodo4.jpg").convert_alpha()
     sp1 = image_format("./asset/sprite/naruhodo1.jpg")
     sp2 = image_format("./asset/sprite/naruhodo2.jpg")
     sp3 = image_format("./asset/sprite/naruhodo3.jpg")
@@ -230,8 +239,8 @@ def main():
     player = Player((sp1,sp2,sp3,sp4))
 
     # 音声読み込み
-    pygame.mixer.init(frequency = 44100)
-    pygame.mixer.music.load("./asset/bgm/tuikyu.mp3")
+    # pygame.mixer.init(frequency = 44100)
+    # pygame.mixer.music.load("./asset/bgm/tuikyu.mp3")
     se1 = pygame.mixer.Sound("./asset/se/den.wav")
     se1.set_volume(0.3)
     se2 = pygame.mixer.Sound("./asset/se/tukue_ban.wav")
@@ -280,13 +289,14 @@ def main():
                     notes.alive = notes.is_alive(music_time)
                     notes.active = True
                     
-                if notes.active:    
-                    pygame.draw.circle(screen,WHITE,(notes.x,notes.y),NOTES_SIZE)
+                if notes.active:
+                    color = LIGHT_BLUE if lane==0 else ORANGE
+                    pygame.draw.circle(screen,color,(notes.x,notes.y),NOTES_SIZE)
                     pygame.draw.circle(screen,BLACK,(notes.x,notes.y),NOTES_SIZE,3)
                 
         if AUTO:
             # オートモード
-            judge_time = 0.01
+            judge_time = 0.03
             notes = find_notes(lane_list,0,music_time)
             if notes is not None and notes.get_dif_time(music_time)<=judge_time:
                 lane = notes.lane
@@ -300,10 +310,18 @@ def main():
                 judge_str[1]=notes.judge(music_time)
             
         time_str = "{0}".format(math.floor(music_time*10)/10)
-        set_txt_ui(screen,font,time_str,x=0,y=0,anchor=(1,0))
-        set_txt_ui(screen,font,judge_str[0],x=END_POS_X[0]-font.size(judge_str[0])[0]/2,y=END_POS_Y[0]-NOTES_SIZE*2,anchor=(0,0))
-        set_txt_ui(screen,font,judge_str[1],x=END_POS_X[1]-font.size(judge_str[1])[0]/2,y=END_POS_Y[1]-NOTES_SIZE*2,anchor=(0,0))
-        
+        # set_txt_ui(screen,font,time_str,x=0,y=0,anchor=(1,0))
+        set_txt_ui(screen,font,judge_str[0],x=END_POS_X[0]-font.size(judge_str[0])[0]/2,y=END_POS_Y[0]-NOTES_SIZE*2+str_pos_y[0],anchor=(0,0))
+        set_txt_ui(screen,font,judge_str[1],x=END_POS_X[1]-font.size(judge_str[1])[0]/2,y=END_POS_Y[1]-NOTES_SIZE*2+str_pos_y[1],anchor=(0,0))
+        for i,str_is_animation in enumerate(judge_is_animation):
+            if str_is_animation:
+                increment = 150 / FPS
+                limit_y = 30
+                str_pos_y[i] -= increment
+                if str_pos_y[i] < -limit_y:
+                    str_pos_y[i] = -limit_y
+                    judge_is_animation[i]=False
+
         pygame.display.update()
 
         # イベント処理

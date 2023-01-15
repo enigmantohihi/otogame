@@ -1,0 +1,18 @@
+{
+    "title":"UNKO",
+    "bpm":150,
+    "time_signature":[4,4],
+    "offset":1.05,
+    "sheet":
+    [
+        {"bar":0,"number":4,"notes":[2,2,2,2],"speed":1},
+        {"bar":1,"number":4,"notes":[2,2,2,2],"speed":1},
+        {"bar":2,"number":8,"notes":[2,2,2,2,2,2,2,2],"speed":1},
+        {"bar":3,"number":16,"notes":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],"speed":1},
+
+        {"bar":5,"number":4,"notes":[2,2,2,2],"speed":1},
+        {"bar":6,"number":4,"notes":[2,2,2,2],"speed":1},
+        {"bar":7,"number":4,"notes":[1,1,1,1],"speed":1},
+        {"bar":8,"number":4,"notes":[2,2,1,2],"speed":1}
+    ]
+}
