@@ -12,7 +12,10 @@
 
         {"bar":5,"number":4,"notes":[2,2,2,2],"speed":1},
         {"bar":6,"number":4,"notes":[2,2,2,2],"speed":1},
-        {"bar":7,"number":4,"notes":[1,1,1,1],"speed":1},
-        {"bar":8,"number":4,"notes":[2,2,1,2],"speed":1}
+        {"bar":7,"number":4,"notes":[2,2,1,2],"speed":1},
+        {"bar":8,"number":4,"notes":[1,1,2,1],"speed":1},
+
+        {"bar":9,"number":16,"notes":[2,2,2],"speed":1},
+        {"bar":10,"number":16,"notes":[2,2,2],"speed":1}
     ]
 }

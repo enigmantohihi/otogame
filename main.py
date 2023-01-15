@@ -9,6 +9,8 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 450
 FPS = 60
 
+AUTO = True
+
 NOTES_SIZE = 20
 NOTES_SPEED = 0.5
 END_POS_X = (731,180)
@@ -22,7 +24,6 @@ GOOD_TIME = 0.117
 BAD_TIME = 0.150
 
 mode = False
-AUTO = True
 
 # Color
 WHITE = (255, 255, 255)
@@ -75,7 +76,7 @@ class Player:
         self.animation_sprites = [ori[0],ori[3]]
         self.sprite_number = 0
         self.animation_count = 0
-        self.animation_time = [4*FPS,0]
+        self.animation_time = [3*FPS,0]
         self.is_animation = True
         
     def display(self):
@@ -246,7 +247,7 @@ def main():
     se2 = pygame.mixer.Sound("./asset/se/tukue_ban.wav")
     se2.set_volume(0.5)
     pygame.mixer.music.play(1)
-    pygame.mixer.music.pause()
+    # pygame.mixer.music.pause()
 
     while True:
         # 背景の描画
@@ -349,7 +350,7 @@ def main():
                         notes.finish = False
                 elif event.key == K_SPACE:
                     pass
-                elif event.key == K_r or event.key == K_i:
+                elif event.key == K_g or event.key == K_h or event.key == K_r or event.key == K_i:
                     if mode:
                         li = [music_time,1]
                         create_list.append(li)

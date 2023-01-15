@@ -1,5 +1,4 @@
 {
-    "path":"./",
     "title":"UNKO",
     "bpm":150,
     "time_signature":[4,4],
@@ -13,7 +12,16 @@
 
         {"bar":5,"number":4,"notes":[2,2,2,2],"speed":1},
         {"bar":6,"number":4,"notes":[2,2,2,2],"speed":1},
-        {"bar":7,"number":4,"notes":[1,1,1,1],"speed":1},
-        {"bar":8,"number":4,"notes":[2,2,1,2],"speed":1}
+        {"bar":7,"number":4,"notes":[2,2,1,2],"speed":1},
+        {"bar":8,"number":4,"notes":[1,1,2,1],"speed":1},
+
+        {"bar":9,"number":16,"notes":[2,2,2,0,2,2,2,0,2,2,2,0,2,2,2],"speed":1},
+        {"bar":10,"number":16,"notes":[1,1,1,0,1,1,1,0,1,1,1,0,1,1,1],"speed":1},
+        {"bar":11,"number":16,"notes":[2,2,1,2,1,0,2,2,1,2,1],"speed":1},
+        {"bar":12,"number":16,"notes":[1,1,2,1,2,0,1,1,2,1,2],"speed":1},
+
+        {"bar":13,"number":16,"notes":[2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,1],"speed":1},
+        {"bar":14,"number":16,"notes":[1,1,1,2,1,1,1,2,1,1,1,2,1,1,1,2],"speed":1},
+        {"bar":15,"number":4,"notes":[1],"speed":3}
     ]
 }
